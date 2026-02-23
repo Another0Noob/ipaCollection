@@ -56,5 +56,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add migu.json
-          git commit -m "Update to ${{ steps.get_release.outputs.tag }}"
+          git commit -m "Update to ${{ steps.get_release.outputs.version }}"
           git push
