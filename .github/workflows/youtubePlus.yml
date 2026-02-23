@@ -17,14 +17,15 @@ jobs:
         id: get_release
         run: |
           RELEASE=$(curl -s https://api.github.com/repos/diarrhea3/YTLiteDiarrhea/releases/latest)
-          TAG=$(echo "$RELEASE" | jq -r '.tag_name')
+          TITLE=$(echo "$RELEASE" | jq -r '.name')
+          VERSION=$(echo "$TITLE" | awk '{print $1}')
           URL=$(echo "$RELEASE" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .browser_download_url')
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Update JSON
         run: |
-          VERSION="${{ steps.get_release.outputs.tag }}"
+          VERSION="${{ steps.get_release.outputs.version }}"
           DOWNLOAD_URL="${{ steps.get_release.outputs.url }}"
           DATE=$(date -Iseconds)
           SIZE=$(curl -sL "$DOWNLOAD_URL" | wc -c)
@@ -46,12 +47,12 @@ jobs:
              }] + .
              ' migu.json > tmp.json
 
-          mv tmp.json repo.json
+          mv tmp.json migu.json
 
       - name: Commit changes
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add repo.json
+          git add migu.json
           git commit -m "Update to ${{ steps.get_release.outputs.tag }}"
           git push
