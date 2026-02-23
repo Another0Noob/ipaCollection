@@ -24,6 +24,15 @@
       "versions": [
         {
           "downloadURL": "https://github.com/diarrhea3/YTLiteDiarrhea/releases/download/ytp-69/21.07.4_YouTubePlus_5.2b4.ipa",
+          "size": 125824898,
+          "version": "ytp-69",
+          "buildVersion": null,
+          "date": "2026-02-23T20:53:32+00:00",
+          "localizedDescription": null,
+          "minOSVersion": null
+        },
+        {
+          "downloadURL": "https://github.com/diarrhea3/YTLiteDiarrhea/releases/download/ytp-69/21.07.4_YouTubePlus_5.2b4.ipa",
           "size": 125800000,
           "version": "21.07.4",
           "buildVersion": null,
