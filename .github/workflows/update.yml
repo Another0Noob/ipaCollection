@@ -1,57 +1,80 @@
-name: Update from YTLiteDiarrhea
+name: Auto Update All Apps
 
 on:
   workflow_dispatch:
-
+  schedule:
+    - cron: "0 3 * * 0"
 permissions:
   contents: write
 
 jobs:
-  update-json:
+  update:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch latest release metadata from GitHub API
-        id: get_release
+      - name: Install jq
+        run: sudo apt-get install jq -y
+
+      - name: Process apps
         run: |
-          RELEASE=$(curl -s https://api.github.com/repos/diarrhea3/YTLiteDiarrhea/releases/latest)
-          TAG=$(echo "$RELEASE" | jq -r '.tag_name')
-          URL=$(echo "$RELEASE" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .browser_download_url')
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "url=$URL" >> $GITHUB_OUTPUT
+          APPS_COUNT=$(jq '.apps | length' migu.json)
 
-      - name: Update JSON
-        run: |
-          VERSION="${{ steps.get_release.outputs.tag }}"
-          DOWNLOAD_URL="${{ steps.get_release.outputs.url }}"
-          DATE=$(date -Iseconds)
-          SIZE=$(curl -sL "$DOWNLOAD_URL" | wc -c)
+          for ((i=0; i<APPS_COUNT; i++)); do
+            DOWNLOAD_URL=$(jq -r ".apps[$i].versions[0].downloadURL" migu.json)
 
-          jq --arg version "$VERSION" \
-             --arg url "$DOWNLOAD_URL" \
-             --arg date "$DATE" \
-             --argjson size "$SIZE" \
-             '
-             .apps[0].versions |=
-             [{
-               downloadURL: $url,
-               size: $size,
-               version: $version,
-               buildVersion: null,
-               date: $date,
-               localizedDescription: null,
-               minOSVersion: null
-             }] + .
-             ' migu.json > tmp.json
+            # Extract OWNER/REPO from GitHub URL
+            REPO=$(echo "$DOWNLOAD_URL" | sed -E 's#https://github.com/([^/]+/[^/]+)/.*#\1#')
 
-          mv tmp.json repo.json
+            echo "Checking $REPO"
+
+            RELEASE=$(curl -s "https://api.github.com/repos/$REPO/releases/latest")
+
+            TAG=$(echo "$RELEASE" | jq -r '.tag_name')
+            URL=$(echo "$RELEASE" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .browser_download_url')
+            SIZE=$(echo "$RELEASE" | jq -r '.assets[] | select(.name | endswith(".ipa")) | .size')
+
+            CURRENT_VERSION=$(jq -r ".apps[$i].versions[0].version" migu.json)
+
+            if [ "$TAG" != "$CURRENT_VERSION" ]; then
+              echo "Updating app index $i to $TAG"
+
+              DATE=$(date -Iseconds)
+
+              jq --arg tag "$TAG" \
+                 --arg url "$URL" \
+                 --arg date "$DATE" \
+                 --argjson size "$SIZE" \
+                 --argjson index "$i" \
+                 '
+                 .apps[$index].versions |=
+                 [{
+                   downloadURL: $url,
+                   size: $size,
+                   version: $tag,
+                   buildVersion: null,
+                   date: $date,
+                   localizedDescription: null,
+                   minOSVersion: null
+                 }] + .
+                 ' migu.json > tmp.json
+
+              mv tmp.json migu.json
+            else
+              echo "App index $i already up to date"
+            fi
+          done
 
       - name: Commit changes
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add repo.json
-          git commit -m "Update to ${{ steps.get_release.outputs.tag }}"
-          git push
+
+          if git diff --quiet; then
+            echo "No changes"
+          else
+            git add migu.json
+            git commit -m "Auto-update apps"
+            git push
+          fi
