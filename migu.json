@@ -12,10 +12,10 @@
       "subtitle": "ok",
       "iconURL": "https://raw.githubusercontent.com/dayanch96/YTLite/refs/heads/main/Resources/icon.png",
       "tintColor": "E36678",
-      "version": "21.08.3",
-      "versionDate": "2026-03-01T04:52:59+00:00",
-      "downloadURL": "https://github.com/diarrhea3/YTLiteDiarrhea/releases/download/ytp-70/21.08.3_YouTubePlus_5.2b4.ipa",
-      "size": 125969488,
+      "version": "21.09.2",
+      "versionDate": "2026-03-08T04:42:24+00:00",
+      "downloadURL": "https://github.com/diarrhea3/YTLiteDiarrhea/releases/download/ytp-71/21.09.2_YouTubePlus_5.2b4.ipa",
+      "size": 126235033,
       "appPermissions": {
         "privacy": {
           "NSBluetoothPeripheralUsageDescription": "YouTube needs bluetooth access to scan for nearby Cast devices.",
